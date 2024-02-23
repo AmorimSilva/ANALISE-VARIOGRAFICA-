@@ -1,0 +1,45 @@
+############################################################
+#INSERINDO DADOS
+library(readxl)
+data <- read_excel("C:/Users/Samuel/Desktop/data2.xlsx")
+############################################################
+#INSTALANDO PACOTES NECESSARIOS
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("gstat")
+library(gstat)
+install.packages("sp")
+library(sp)
+############################################################
+#TRANFORMANDO AS COLUNAS X E Y EM COORDENADAS
+class(data)
+coordinates(data)=~x+y
+class(data)
+###########################################################
+#VARIOGRAMA
+TheVariogram=variogram(data$TmaxJA~1, data=data)
+TheVariogramModel <- vgm(psill=4, model="Sph", nugget=0.0001, range=2)
+plot(TheVariogram)
+plot(TheVariogram, model=TheVariogramModel,main = "Semivariogram - TMAX Janeiro",col= "red") 
+###########################################################
+TheVariogram=variogram(data$TmaxJA~1, data=data)
+plot(TheVariogram)
+TheVariogramModel <- vgm(psill=50000, model="Sph", nugget=0.001, range=10)
+FittedModel <- fit.variogram(TheVariogram, model=TheVariogramModel)
+plot(TheVariogram, model=FittedModel,main = "Semivariogram - TMAX Janeiro",col= "red")
+###########################################################
+TheVariogram <- variogram(TheGStat, alpha=c(0,45,90,135))
+TheModel=vgm(model='Lin' , anis=c(0,1))
+FittedModel <- fit.variogram(TheVariogram, model=TheModel)
+plot(TheVariogram, model=FittedModel)
+###########################################################
+TheGStat <- gstat(TheGStat, id="Sine", model=FittedModel )  
+Columns=seq(from=1, to=40, by=25)
+Rows=seq(from=1, to=50, by=7)
+TheGrid <- expand.grid(x=Columns,y=Rows  )
+coordinates(TheGrid) <- ~ x+y
+gridded(TheGrid) <- TRUE
+plot(TheGrid, cex=1)
+points(data$TmaxJA, pch=1, col='red', cex=1)
+title("Interpolation Grid and Sample Points")
+##########################################################
